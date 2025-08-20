@@ -114,4 +114,42 @@ router.delete("/:id", authMiddleware, recruiterOnly, async (req, res) => {
   }
 });
 
+router.post("/:id/apply", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "user") {
+      return res.status(403).json({ message: "Only users can apply for jobs" });
+    }
+
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    
+    if (job.applicants.some(app => app.user.toString() === req.user.id)) {
+      return res.status(400).json({ message: "You have already applied to this job" });
+    }
+
+    job.applicants.push({ user: req.user.id });
+    await job.save();
+
+    res.json({ message: "Applied successfully", job });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+router.get("/:id/applicants", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admins can view applicants" });
+    }
+
+    const job = await Job.findById(req.params.id).populate("applicants.user", "name email");
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    res.json({ applicants: job.applicants });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 export default router;
