@@ -1,0 +1,20 @@
+# Node modules
+JobSearchPortal/node_modules/
+server/node_modules/
+
+# Build outputs
+JobSearchPortal/dist/
+server/dist/
+JobSearchPortal/build/
+server/build/
+
+# Logs
+*.log
+
+# Environment
+JobSearchPortal/.env
+server/.env
+
+# OS-specific
+.DS_Store
+Thumbs.db
