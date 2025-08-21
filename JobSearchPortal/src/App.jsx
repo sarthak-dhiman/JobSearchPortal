@@ -6,6 +6,11 @@ import Register from "./pages/Register";
 import Jobs from "./pages/Jobs";
 import Admin from "./pages/Admin";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SavedJobs from "./pages/SavedJobs";
+import Profile from "./pages/Profile";
+import Companies from "./pages/Companies";
+import JobDetails from "./pages/JobDetails";
+
 
 function App() {
   return (
@@ -34,6 +39,18 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/saved" element={
+        <ProtectedRoute>
+           <SavedJobs />
+        </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+  <ProtectedRoute>
+    <Profile />
+  </ProtectedRoute>
+        } />
+        <Route path="/companies" element={<Companies />} />
+        <Route path="/jobs/:id" element={<JobDetails />} />
       </Routes>
     </Router>
   );
