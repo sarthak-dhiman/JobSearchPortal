@@ -23,6 +23,12 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    resume: {
+      url: String,               
+      originalName: String,      
+      size: Number,              
+      updatedAt: Date,
+  },
   },
   { timestamps: true }
 );

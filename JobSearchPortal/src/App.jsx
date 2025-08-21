@@ -10,12 +10,13 @@ import SavedJobs from "./pages/SavedJobs";
 import Profile from "./pages/Profile";
 import Companies from "./pages/Companies";
 import JobDetails from "./pages/JobDetails";
-
+import "./index.css";
 
 function App() {
   return (
     <Router>
       <NavBar />
+      <main className="main">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -52,6 +53,7 @@ function App() {
         <Route path="/companies" element={<Companies />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
       </Routes>
+      </main>
     </Router>
   );
 }

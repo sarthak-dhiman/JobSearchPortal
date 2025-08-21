@@ -1,62 +1,84 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./SavedJobs.css";
+
+const LS_KEY = "savedJobs";
 
 export default function SavedJobs() {
-  const [jobs, setJobs] = useState([]);
-  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("savedJobs");
-      setJobs(raw ? JSON.parse(raw) : []);
+      const raw = localStorage.getItem(LS_KEY);
+      setItems(raw ? JSON.parse(raw) : []);
     } catch {
-      setJobs([]);
+      setItems([]);
     }
   }, []);
 
-  const remove = (id) => {
-    const next = jobs.filter(j => j._id !== id);
-    setJobs(next);
-    localStorage.setItem("savedJobs", JSON.stringify(next));
+  const removeOne = (id) => {
+    const next = items.filter(j => j._id !== id);
+    setItems(next);
+    localStorage.setItem(LS_KEY, JSON.stringify(next));
   };
 
-  if (!jobs.length) {
-    return (
-      <div className="container mt-6">
-        <h2>Saved Jobs</h2>
-        <p>You haven’t saved any jobs yet.</p>
-        <button onClick={() => navigate("/jobs")} className="btn btn-primary">Browse Jobs</button>
-      </div>
-    );
-  }
+  const clearAll = () => {
+    setItems([]);
+    localStorage.setItem(LS_KEY, JSON.stringify([]));
+  };
 
   return (
-    <div className="container mt-6">
-      <h2>Saved Jobs</h2>
-      <ul className="list-group mt-3">
-        {jobs.map(job => (
-          <li key={job._id} className="list-group-item">
-            <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-              <div>
-                <h5 style={{margin:0}}>{job.title}</h5>
-                <small>{job.company} — {job.location}</small>
-              </div>
-              <div style={{display:"flex", gap:8}}>
-                <Link to={`/jobs/${job._id}`} className="btn btn-sm btn-outline-secondary">View</Link>
-                <button onClick={() => remove(job._id)} className="btn btn-sm btn-danger">Remove</button>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+    <div className="saved-page">
+      <div className="saved-container">
+        <header className="saved-hero">
+          <h1>Your <span className="accent">Saved Jobs</span></h1>
+          {!!items.length && (
+            <button className="btn btn--ghost" onClick={clearAll}>Clear all</button>
+          )}
+        </header>
+
+        {items.length === 0 ? (
+          <div className="empty">
+            <h3>No saved jobs yet</h3>
+            <p>Browse jobs and tap <strong>Save</strong> to keep them here.</p>
+            <Link to="/jobs" className="btn">Browse jobs</Link>
+          </div>
+        ) : (
+          <ul className="saved-list">
+            {items.map(job => {
+              const company = job.company?.name || job.company || "Company";
+              const location = job.location || "Flexible";
+              const img = job.image || "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=800&q=60";
+              const salary = job.salaryMin && job.salaryMax
+                ? `$${Number(job.salaryMin).toLocaleString()} - ${Number(job.salaryMax).toLocaleString()}`
+                : null;
+
+              return (
+                <li className="saved-card" key={job._id}>
+                  <Link to={`/jobs/${job._id}`} className="thumb">
+                    <img src={img} alt={company} loading="lazy" />
+                  </Link>
+
+                  <div className="saved-body">
+                    <Link to={`/jobs/${job._id}`} className="title">
+                      {company} is hiring for {job.title}
+                    </Link>
+                    <div className="meta">
+                      <span className="tag">{location}</span>
+                      {salary && <span className="tag">{salary}</span>}
+                    </div>
+
+                    <div className="actions">
+                      <Link to={`/jobs/${job._id}`} className="btn btn--ghost">Details</Link>
+                      <button className="btn btn--danger" onClick={() => removeOne(job._id)}>Remove</button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
-}
-export function saveJob(job) {
-  const raw = localStorage.getItem("savedJobs");
-  const arr = raw ? JSON.parse(raw) : [];
-  if (!arr.find(j => j._id === job._id)) {
-    arr.push({_id: job._id, title: job.title, company: job.company, location: job.location});
-    localStorage.setItem("savedJobs", JSON.stringify(arr));
-  }
 }

@@ -1,80 +1,85 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import User from "../models/User.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import auth from "../middleware/auth.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-
-router.post("/register", async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
-
-    
-    let user = await User.findOne({ email });
-    if (user) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    
-    user = new User({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "user",
-    });
-
-    await user.save();
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(process.cwd(), "uploads", "resumes");
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${req.user.id}-${Date.now()}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== "application/pdf") return cb(new Error("PDF only"));
+    cb(null, true);
+  },
 });
 
-
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
+router.get("/me", authMiddleware, async (req, res) => {
+  const user = await User.findById(req.user.id).select("-password");
+  res.json(user);
 });
 
+router.put("/me", authMiddleware, async (req, res) => {
+  const { name } = req.body;
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { ...(name ? { name } : {}) },
+    { new: true }
+  ).select("-password");
+  res.json(user);
+});
+router.post("/me/resume", authMiddleware, upload.single("resume"), async (req, res) => {
+  const file = req.file;
+  if (!file) return res.status(400).json({ message: "No file received" });
 
-router.get("/profile", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const url = `${baseUrl}/uploads/resumes/${file.filename}`;
+
+  const user = await User.findById(req.user.id);
+  if (user?.resume?.url) {
+    try {
+      const old = user.resume.url.split("/uploads/")[1];
+      const p = path.join(process.cwd(), "uploads", old);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    } catch {}
   }
+
+  user.resume = {
+    url,
+    originalName: file.originalname,
+    size: file.size,
+    updatedAt: new Date(),
+  };
+  await user.save();
+
+  res.json({ message: "Uploaded", resume: user.resume });
+});
+
+router.delete("/me/resume", authMiddleware, async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (user?.resume?.url) {
+    try {
+      const old = user.resume.url.split("/uploads/")[1];
+      const p = path.join(process.cwd(), "uploads", old);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    } catch {}
+  }
+  user.resume = undefined;
+  await user.save();
+  res.json({ message: "Deleted" });
 });
 
 export default router;

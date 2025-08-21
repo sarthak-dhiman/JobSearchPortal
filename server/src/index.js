@@ -8,6 +8,10 @@ import companyRoutes from "./routes/companyRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import filterRoutes from "./routes/filterRoutes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -22,6 +26,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/filters", filterRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 mongoose
   .connect(process.env.MONGO_URI)
