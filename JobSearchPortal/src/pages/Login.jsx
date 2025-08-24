@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import { useAuth } from "../context/AuthContext";   // ← use context
 import "./Login.css";
 
 export default function Login() {
@@ -12,6 +13,7 @@ export default function Login() {
   const [remember, setRemember] = useState(true);
   const emailRef = useRef(null);
   const navigate = useNavigate();
+  const { login } = useAuth();                     
 
   useEffect(() => {
     document.body.classList.add("auth-no-scroll", "auth-bg");
@@ -35,30 +37,27 @@ export default function Login() {
   const onSubmit = async (ev) => {
     ev.preventDefault();
     setServerErr("");
-
     if (!validate()) return;
 
     try {
       setLoading(true);
-      const { data } = await api.post("/auth/login", form);
-
-      const payload = JSON.stringify(data);
-      if (remember) {
-        localStorage.setItem("user", payload);
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.role || data.user?.role || "user");
-      } else {
-        sessionStorage.setItem("user", payload);
-        sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("role", data.role || data.user?.role || "user");
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
+   
+      const { data } = await api.post("auth/login", {
+        email: form.email.trim(),
+        password: form.password,
+      });
+      
+      if (!data?.token || !data?.user) {
+        throw new Error("Malformed response");
       }
+
+    
+      login(data.user, data.token, remember);
 
       navigate("/");
     } catch (err) {
-      setServerErr(err.response?.data?.message || "Invalid credentials");
+      const msg = err?.response?.data?.message || err?.message || "Invalid credentials";
+      setServerErr(msg);
     } finally {
       setLoading(false);
     }

@@ -1,60 +1,68 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import api from "../utils/api";
 
 const AuthCtx = createContext(null);
-export const useAuth = () => useContext(AuthCtx);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const isAuthed = !!token && !!user;
 
-  
+  // hydrate from storage on first mount
   useEffect(() => {
-    const t = localStorage.getItem("token");
-    const uStr = localStorage.getItem("user");
-    if (t && uStr) {
-      setToken(t);
-      try { setUser(JSON.parse(uStr)); } catch {}
+    try {
+      const t = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const uStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+      const u = uStr ? JSON.parse(uStr) : null;
+      if (t && u) {
+        setToken(t);
+        setUser(u);
+      }
+    } catch {
+      // ignore
     }
-    setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    const { data } = await api.post("/auth/login", { email, password });
-    const flatUser = data.user?.user ? data.user.user : data.user;
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(flatUser));
-    localStorage.setItem("role", flatUser.role);
-    setToken(data.token);
-    setUser(flatUser);
-    return flatUser;
+  // optional: validate token & refresh user
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      if (!token) return;
+      try {
+        const { data } = await api.get("users/me");
+        if (!ignore) setUser(data);
+      } catch {
+        if (!ignore) logout(); // invalid token -> logout
+      }
+    })();
+    return () => { ignore = true; };
+  }, [token]);
+
+  const login = (nextUser, nextToken, remember = true) => {
+    setUser(nextUser);
+    setToken(nextToken);
+    // persist
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem("token", nextToken);
+    storage.setItem("user", JSON.stringify(nextUser));
+    // clear the other storage to avoid conflicts
+    (remember ? sessionStorage : localStorage).removeItem("token");
+    (remember ? sessionStorage : localStorage).removeItem("user");
+    // notify any listeners (optional)
+    window.dispatchEvent(new Event("auth:changed"));
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
-    setToken(null);
     setUser(null);
+    setToken(null);
+    localStorage.removeItem("token"); localStorage.removeItem("user");
+    sessionStorage.removeItem("token"); sessionStorage.removeItem("user");
+    window.dispatchEvent(new Event("auth:changed"));
   };
 
-  const refreshMe = async () => {
-    try {
-      const { data } = await api.get("/users/me");
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("role", data.role);
-      setUser(data);
-      return data;
-    } catch {
-      logout();
-      return null;
-    }
-  };
+  const value = useMemo(() => ({ user, token, isAuthed, login, logout }), [user, token, isAuthed]);
 
-  return (
-    <AuthCtx.Provider value={{ user, token, loading, isAuthed: !!token, login, logout, refreshMe }}>
-      {children}
-    </AuthCtx.Provider>
-  );
+  return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
+
+export const useAuth = () => useContext(AuthCtx);
