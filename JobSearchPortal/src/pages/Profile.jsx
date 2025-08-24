@@ -7,12 +7,21 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
+  const [skillInput, setSkillInput] = useState("");
   const fileRef = useRef(null);
 
+  // --- helpers ---
   const load = async () => {
     try {
-      const { data } = await api.get("/users/me");
-      setMe(data);
+      const { data } = await api.get("/users/me"); // keep your existing path
+      // ensure defaults so the UI never crashes
+      setMe({
+        ...data,
+        phone: data?.phone || "",
+        address: data?.address || "",
+        email: data?.email || "",
+        skills: Array.isArray(data?.skills) ? data.skills : [],
+      });
     } catch (e) {
       setErr("Please log in to view your profile.");
     }
@@ -20,38 +29,51 @@ export default function Profile() {
 
   useEffect(() => { load(); }, []);
 
-  const saveName = async () => {
-    if (!me?.name?.trim()) return;
+  const validate = () => {
+    if (!me?.name?.trim()) return "Name is required.";
+    if (!me?.email?.trim()) return "Email is required.";
+    // simple email check
+    const em = me.email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return "Please enter a valid email.";
+    // optional phone check (basic E.164-ish or local numbers)
+    if (me.phone && !/^[+]?[\d\s().-]{7,}$/.test(me.phone.trim())) return "Please enter a valid phone number.";
+    return "";
+  };
+
+  const saveProfile = async () => {
+    const v = validate();
+    if (v) { setErr(v); return; }
     try {
+      setErr("");
       setSaving(true);
-      await api.put("/users/me", { name: me.name.trim() });
+      const payload = {
+        name: me.name.trim(),
+        email: me.email.trim(),
+        phone: me.phone?.trim() || "",
+        address: me.address?.trim() || "",
+        skills: (me.skills || []).map(s => String(s).trim()).filter(Boolean),
+      };
+      await api.put("/users/me", payload);
+      await load(); // refresh with server truth
     } catch (e) {
-      setErr(e.response?.data?.message || "Could not save name");
+      setErr(e.response?.data?.message || "Could not save profile");
     } finally {
       setSaving(false);
-      load();
     }
   };
 
+  // ---- resume upload / delete ----
   const onPickFile = () => fileRef.current?.click();
 
   const uploadResume = async (file) => {
     if (!file) return;
-    if (file.type !== "application/pdf") {
-      setErr("Please upload a PDF.");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) { // 10 MB
-      setErr("Max file size is 10 MB.");
-      return;
-    }
+    if (file.type !== "application/pdf") { setErr("Please upload a PDF."); return; }
+    if (file.size > 10 * 1024 * 1024) { setErr("Max file size is 10 MB."); return; }
     try {
       setErr(""); setUploading(true);
       const fd = new FormData();
       fd.append("resume", file);
-      await api.post("/users/me/resume", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await api.post("/users/me/resume", fd, { headers: { "Content-Type": "multipart/form-data" } });
       await load();
     } catch (e) {
       setErr(e.response?.data?.message || "Upload failed");
@@ -69,6 +91,24 @@ export default function Profile() {
     }
   };
 
+  // ---- skills handlers ----
+  const addSkill = () => {
+    const s = skillInput.trim();
+    if (!s) return;
+    if (me.skills?.some((x) => x.toLowerCase() === s.toLowerCase())) {
+      setSkillInput("");
+      return;
+    }
+    setMe({ ...me, skills: [...(me.skills || []), s] });
+    setSkillInput("");
+  };
+
+  const removeSkill = (idx) => {
+    const next = [...(me.skills || [])];
+    next.splice(idx, 1);
+    setMe({ ...me, skills: next });
+  };
+
   if (err && !me) return <div className="profile-page"><p className="err">{err}</p></div>;
   if (!me) return <div className="profile-page"><p>Loading…</p></div>;
 
@@ -81,6 +121,7 @@ export default function Profile() {
 
         {err && <p className="err">{err}</p>}
 
+        {/* Account */}
         <section className="card">
           <h3>Account</h3>
           <div className="grid2">
@@ -94,17 +135,78 @@ export default function Profile() {
             </label>
             <label>
               <span className="lbl">Email</span>
-              <input className="input" value={me.email || ""} disabled />
+              <input
+                className="input"
+                value={me.email || ""}
+                onChange={(e) => setMe({ ...me, email: e.target.value })}
+              />
             </label>
           </div>
+
+          <div className="grid2">
+            <label>
+              <span className="lbl">Phone</span>
+              <input
+                className="input"
+                placeholder="+1 555 123 4567"
+                value={me.phone || ""}
+                onChange={(e) => setMe({ ...me, phone: e.target.value })}
+              />
+            </label>
+            <label>
+              <span className="lbl">Address</span>
+              <input
+                className="input"
+                placeholder="City, State / Country"
+                value={me.address || ""}
+                onChange={(e) => setMe({ ...me, address: e.target.value })}
+              />
+            </label>
+          </div>
+
+          {/* Skills */}
+          <div className="skills-block">
+            <span className="lbl">Skills</span>
+            <div className="skills-input-row">
+              <input
+                className="input"
+                placeholder="Add a skill and press Enter (e.g., React, Node.js)"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) => (e.key === "Enter" ? (e.preventDefault(), addSkill()) : null)}
+              />
+              <button type="button" className="btn" onClick={addSkill}>Add</button>
+            </div>
+
+            <div className="skills-list">
+              {(me.skills || []).map((s, idx) => (
+                <span key={`${s}-${idx}`} className="skill-chip">
+                  {s}
+                  <button
+                    type="button"
+                    className="chip-x"
+                    onClick={() => removeSkill(idx)}
+                    aria-label={`Remove ${s}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              {(!me.skills || me.skills.length === 0) && (
+                <p className="muted">No skills added yet.</p>
+              )}
+            </div>
+          </div>
+
           <div className="row">
             <span className="muted">Role: {me.role}</span>
-            <button className="btn" disabled={saving} onClick={saveName}>
+            <button className="btn" disabled={saving} onClick={saveProfile}>
               {saving ? "Saving…" : "Save changes"}
             </button>
           </div>
         </section>
 
+        {/* Resume */}
         <section className="card">
           <h3>Resume</h3>
 

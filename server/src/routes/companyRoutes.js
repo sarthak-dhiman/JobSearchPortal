@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Router } from "express";
 import Company from "../models/Company.js";
 import { authMiddleware, recruiterOnly } from "../middleware/auth.js";
 
@@ -63,3 +63,4 @@ router.put("/:id", authMiddleware, recruiterOnly, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+export default Router;

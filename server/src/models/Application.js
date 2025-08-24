@@ -1,28 +1,17 @@
 import mongoose from "mongoose";
 
-const applicationSchema = new mongoose.Schema({
-  job: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Job",
-    required: true,
+const ApplicationSchema = new mongoose.Schema(
+  {
+    job: { type: mongoose.Schema.Types.ObjectId, ref: "Job", required: true, index: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    status: { type: String, enum: ["applied", "review", "rejected", "accepted"], default: "applied" },
+    resumeUrl: String,
+    coverLetter: String,
   },
-  candidate: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  resume: {
-    type: String,
-    required: true,
-  },
-  coverLetter: {
-    type: String,
-  },
-  status: {
-    type: String,
-    enum: ["pending", "accepted", "rejected"],
-    default: "pending",
-  },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-export default mongoose.model("Application", applicationSchema);
+ApplicationSchema.index({ job: 1, user: 1 }, { unique: true });
+
+export default mongoose.model("Application", ApplicationSchema);
+

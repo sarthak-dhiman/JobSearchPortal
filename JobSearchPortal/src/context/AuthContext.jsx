@@ -1,50 +1,60 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import api from "../utils/api";
 
+const AuthCtx = createContext(null);
+export const useAuth = () => useContext(AuthCtx);
 
-export const AuthContext = createContext();
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null); 
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   
   useEffect(() => {
-    if (token) {
-      
-      fetch("http://localhost:5000/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data._id) {
-            setUser(data);
-          } else {
-            logout();
-          }
-        })
-        .catch(() => logout());
+    const t = localStorage.getItem("token");
+    const uStr = localStorage.getItem("user");
+    if (t && uStr) {
+      setToken(t);
+      try { setUser(JSON.parse(uStr)); } catch {}
     }
-  }, [token]);
+    setLoading(false);
+  }, []);
 
-  
-  const login = (jwtToken, userData) => {
-    setToken(jwtToken);
-    localStorage.setItem("token", jwtToken);
-    setUser(userData);
+  const login = async (email, password) => {
+    const { data } = await api.post("/auth/login", { email, password });
+    const flatUser = data.user?.user ? data.user.user : data.user;
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(flatUser));
+    localStorage.setItem("role", flatUser.role);
+    setToken(data.token);
+    setUser(flatUser);
+    return flatUser;
   };
 
-  
   const logout = () => {
-    setUser(null);
-    setToken(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    setToken(null);
+    setUser(null);
+  };
+
+  const refreshMe = async () => {
+    try {
+      const { data } = await api.get("/users/me");
+      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("role", data.role);
+      setUser(data);
+      return data;
+    } catch {
+      logout();
+      return null;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthCtx.Provider value={{ user, token, loading, isAuthed: !!token, login, logout, refreshMe }}>
       {children}
-    </AuthContext.Provider>
+    </AuthCtx.Provider>
   );
-};
+}

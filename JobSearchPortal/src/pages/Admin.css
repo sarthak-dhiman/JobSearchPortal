@@ -1,0 +1,110 @@
+.admin {
+  max-width: 1000px;
+  margin: 24px auto;
+  padding: 0 16px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.admin__title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.admin__form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  background: #f7f7f9;
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px 0 18px;
+}
+
+.inp {
+  border: 1px solid #d5d8e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+}
+.inp:focus { border-color: #8aa4ff; box-shadow: 0 0 0 3px rgba(138,164,255,.15); }
+.inp--area { resize: vertical; min-height: 100px; }
+
+.btn {
+  justify-self: start;
+  background: #2f5aff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(0.95); }
+
+.admin__head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 6px 0 10px;
+}
+.muted { color: #6b7280; font-size: 14px; }
+
+.jobgrid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.jobcard {
+  background: #ffffff;
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.jobcard__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jobcard__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.badge {
+  font-size: 12px;
+  color: #1f2937;
+  background: #eef2ff;
+  border: 1px solid #dfe6ff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.jobcard__meta {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.jobcard__desc {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

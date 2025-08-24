@@ -3,6 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../utils/api";
 import "./Home.css";
 
+const stripHtml = (html = "") =>
+  html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+const clamp = (s = "", n = 110) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+
 export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,9 +17,16 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get("/jobs?limit=6");
-        setFeatured(data || []);
-      } catch {
+        const { data } = await api.get("jobs", { params: { limit: 6, sort: "-createdAt" } });
+        const items =
+          Array.isArray(data?.items) ? data.items :
+          Array.isArray(data?.jobs) ? data.jobs :
+          Array.isArray(data?.results) ? data.results :
+          Array.isArray(data?.docs) ? data.docs :
+          Array.isArray(data) ? data : [];
+        setFeatured(items);
+      } catch (e) {
+        console.error("Failed to load featured jobs:", e?.response?.data || e.message);
         setFeatured([]);
       } finally {
         setLoading(false);
@@ -24,12 +36,15 @@ export default function Home() {
 
   const onSearch = (e) => {
     e.preventDefault();
-    navigate(q.trim() ? `/jobs?q=${encodeURIComponent(q.trim())}` : "/jobs");
+    const term = q.trim();
+    navigate(term ? `/jobs?q=${encodeURIComponent(term)}` : "/jobs");
   };
+
+  const list = Array.isArray(featured) ? featured : [];
 
   return (
     <div className="home">
-      {}
+      {/* HERO */}
       <section className="hero">
         <div className="hero__content">
           <h1 className="hero__title">
@@ -51,40 +66,38 @@ export default function Home() {
         </div>
       </section>
 
-      {}
-      {}
+      {/* EXPLORE */}
       <section className="quick">
-  <h2 className="section__title">Explore</h2>
+        <h2 className="section__title">Explore</h2>
 
-  <div className="chips">
-    <Link to="/jobs?type=remote" className="chip">
-      <img src="/src/assets/work-from-home.png" alt="" className="chip__img" /> Remote
-    </Link>
+        <div className="chips">
+          <Link to="/jobs?type=remote" className="chip">
+            <img src="/src/assets/work-from-home.png" alt="" className="chip__img" /> Remote
+          </Link>
 
-    <Link to="/jobs?location=United%20States" className="chip">
-      <img src="/src/assets/usa.png" alt="" className="chip__img" /> United States
-    </Link>
+          <Link to="/jobs?location=United%20States" className="chip">
+            <img src="/src/assets/usa.png" alt="" className="chip__img" /> United States
+          </Link>
 
-    <Link to="/jobs?location=United%20Kingdom" className="chip">
-      <img src="/src/assets/uk.png" alt="" className="chip__img" /> United Kingdom
-    </Link>
+          <Link to="/jobs?location=United%20Kingdom" className="chip">
+            <img src="/src/assets/uk.png" alt="" className="chip__img" /> United Kingdom
+          </Link>
 
-    <Link to="/jobs?company=Google" className="chip">
-      <img src="/src/assets/google.png" alt="" className="chip__img" /> Google
-    </Link>
+          <Link to="/jobs?company=Google" className="chip">
+            <img src="/src/assets/google.png" alt="" className="chip__img" /> Google
+          </Link>
 
-    <Link to="/jobs?company=Microsoft" className="chip">
-      <img src="/src/assets/microsoft.png" alt="" className="chip__img" /> Microsoft
-    </Link>
+          <Link to="/jobs?company=Microsoft" className="chip">
+            <img src="/src/assets/microsoft.png" alt="" className="chip__img" /> Microsoft
+          </Link>
 
-    <Link to="/companies" className="chip">
-      <img src="/src/assets/ra.png" alt="" className="chip__img" /> All Companies
-    </Link>
-  </div>
-</section>
+          <Link to="/companies" className="chip">
+            <img src="/src/assets/ra.png" alt="" className="chip__img" /> All Companies
+          </Link>
+        </div>
+      </section>
 
-
-      {}
+      {/* FEATURED */}
       <section className="featured">
         <div className="featured__head">
           <h2 className="section__title">Featured Jobs</h2>
@@ -93,31 +106,36 @@ export default function Home() {
 
         {loading ? (
           <p className="muted center">Loading featured jobs…</p>
-        ) : featured.length === 0 ? (
+        ) : list.length === 0 ? (
           <p className="muted center">No featured jobs yet.</p>
         ) : (
           <div className="grid">
-            {featured.map((j) => (
-              <Link key={j._id} to={`/jobs/${j._id}`} className="card">
-                <div className="card__top">
-                  <h3 className="card__title">{j.title}</h3>
-                  <span className="badge">{j.location || "Flexible"}</span>
-                </div>
-                <p className="card__meta">{j.company?.name || j.company}</p>
-                <p className="card__desc">
-                  {(j.description || "").slice(0, 110) || "Role description coming soon…"}…
-                </p>
-                <div className="card__actions">
-                  <span className="btn btn--ghost">Details</span>
-                  <span className="btn">Apply</span>
-                </div>
-              </Link>
-            ))}
+            {list.map((j) => {
+              const company =
+                j.companyName || (typeof j.company === "object" ? j.company?.name : j.company);
+              const badge = j.location || j.type || j.workMode || j.employmentType || "Flexible";
+              const desc = clamp(stripHtml(j.description || ""), 110);
+
+              return (
+                <Link key={j._id || j.url || j.title} to={`/jobs/${j._id || ""}`} className="card">
+                  <div className="card__top">
+                    <h3 className="card__title">{j.title}</h3>
+                    <span className="badge">{badge}</span>
+                  </div>
+                  <p className="card__meta">{company}</p>
+                  <p className="card__desc">{desc || "Role description coming soon…"}</p>
+                  <div className="card__actions">
+                    <span className="btn btn--ghost">Details</span>
+                    <span className="btn">Apply</span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
 
-      {}
+      {/* HOW IT WORKS */}
       <section className="how">
         <h2 className="section__title">How it works</h2>
         <div className="steps">

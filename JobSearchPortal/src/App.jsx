@@ -10,11 +10,13 @@ import SavedJobs from "./pages/SavedJobs";
 import Profile from "./pages/Profile";
 import Companies from "./pages/Companies";
 import JobDetails from "./pages/JobDetails";
+import RecruiterPost from "./pages/RecruiterPost";
+import RecruiterJobs from "./pages/RecruiterJobs";
 import "./index.css";
 
 function App() {
   return (
-    <Router>
+    <>
       <NavBar />
       <main className="main">
       <Routes>
@@ -22,6 +24,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/jobs" element={<Jobs />} />
+        <Route path="/jobs/:id" element={<JobDetails />} />
         {}
         <Route
           path="/jobs"
@@ -31,6 +34,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/recruiter/post" element={<RecruiterPost />} />
+        <Route path="/recruiter/jobs" element={<RecruiterJobs />} />
 
         <Route
           path="/admin"
@@ -54,7 +59,7 @@ function App() {
         <Route path="/jobs/:id" element={<JobDetails />} />
       </Routes>
       </main>
-    </Router>
+    </>
   );
 }
 

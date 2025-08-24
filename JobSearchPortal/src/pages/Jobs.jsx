@@ -3,50 +3,94 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import "./Jobs.css";
 
-
-const useQuery = () => new URLSearchParams(useLocation().search);
+const useQuery = () => {
+  const { search } = useLocation();
+  return useMemo(() => new URLSearchParams(search), [search]);
+};
 
 export default function Jobs() {
   const q = useQuery();
+  const { search } = useLocation();
   const navigate = useNavigate();
 
-  
   const [role, setRole] = useState(q.get("role") || "all");
   const [level, setLevel] = useState(q.get("level") || "all");
   const [type, setType] = useState(q.get("type") || "all");
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  
   const apiParams = useMemo(() => {
     const p = {};
-    if (q.get("q")) p.q = q.get("q");
-    if (q.get("location")) p.location = q.get("location");
-    if (q.get("company")) p.company = q.get("company");
-    if (type !== "all") p.type = type;                 
-    if (role !== "all") p.role = role;                 
-    if (level !== "all") p.level = level;              
+    const qStr = q.get("q");
+    const locStr = q.get("location");
+    const compStr = q.get("company");
+
+    if (qStr) p.q = qStr;
+    if (locStr) p.location = locStr;
+    if (compStr) {
+      p.companyName = compStr;
+      p.company = compStr;
+    }
+
+    if (type !== "all") {
+      p.type = type;
+      if (["remote", "onsite", "hybrid"].includes(type)) {
+        p.workMode = type;
+      } else if (["full-time", "part-time", "contract"].includes(type)) {
+        p.employmentType = type;
+      }
+    }
+
+    if (role !== "all") p.role = role;
+    if (level !== "all") p.level = level;
+    p.limit = Number(q.get("limit")) || 20;
+
     return p;
-  }, [q, role, level, type]);
+  }, [search, role, level, type, q]);
 
   useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+
     (async () => {
       try {
         setLoading(true);
-        const { data } = await api.get("/jobs", { params: apiParams });
-        setJobs(Array.isArray(data) ? data : (data?.jobs || []));
-      } catch {
-        setJobs([]);
+        const { data } = await api.get("jobs", {
+          params: apiParams,
+          signal: controller.signal,
+        });
+
+        if (aborted) return;
+        let list = [];
+        if (Array.isArray(data)) list = data;
+        else if (Array.isArray(data?.jobs)) list = data.jobs;
+        else if (Array.isArray(data?.data?.jobs)) list = data.data.jobs;
+        else if (Array.isArray(data?.results)) list = data.results;
+        else if (Array.isArray(data?.docs)) list = data.docs;
+        else if (Array.isArray(data?.items)) list = data.items;
+
+        setJobs(list);
+      } catch (e) {
+        if (!aborted) {
+          console.error("jobs fetch failed:", e?.response?.data || e.message || e);
+          setJobs([]);
+        }
       } finally {
-        setLoading(false);
+        if (!aborted) setLoading(false);
       }
     })();
-  }, [apiParams]);
 
-  // keep URL in sync when local filters change
+    return () => {
+      aborted = true;
+      controller.abort();
+    };
+  }, [JSON.stringify(apiParams)]);
+
   const updateUrl = (next) => {
     const params = new URLSearchParams(window.location.search);
-    Object.entries(next).forEach(([k, v]) => (v === "all" || !v) ? params.delete(k) : params.set(k, v));
+    Object.entries(next).forEach(([k, v]) =>
+      v === "all" || v === "" || v == null ? params.delete(k) : params.set(k, v)
+    );
     navigate(`/jobs?${params.toString()}`, { replace: true });
   };
 
@@ -61,10 +105,9 @@ export default function Jobs() {
     <div className="jobs-page">
       <div className="jobs-container">
         <header className="jobs-hero">
-          <h1>Discover Your Next <span className="accent">Remote Adventure</span></h1>
+          <h1>Discover Your Next <span className="accent">Adventure</span></h1>
         </header>
 
-        {/* filter bar */}
         <div className="filters">
           <div className="filter">
             <label>Job Role</label>
@@ -114,7 +157,6 @@ export default function Jobs() {
           </div>
         </div>
 
-        {/* results */}
         {loading ? (
           <p className="muted center">Loading jobs…</p>
         ) : jobs.length === 0 ? (
@@ -125,15 +167,18 @@ export default function Jobs() {
         ) : (
           <ul className="job-list">
             {jobs.map((job) => {
-              const companyName = typeof job.company === "object" ? job.company?.name : job.company;
+              const companyName =
+                job.companyName ||
+                (typeof job.company === "object" ? job.company?.name : job.company);
+
               const postedBy = job.postedBy?.name || "Admin";
               const date = job.createdAt ? new Date(job.createdAt).toLocaleDateString() : "";
               const salary = formatMoney(job.salaryMin, job.salaryMax, job.salaryPeriod || "month");
               const years = job.experienceYears ?? 0;
 
               return (
-                <li className="job-card" key={job._id}>
-                  <Link to={`/jobs/${job._id}`} className="thumb">
+                <li className="job-card" key={job._id || job.url || job.title}>
+                  <Link to={`/jobs/${job._id || ""}`} className="thumb">
                     <img
                       src={job.image || "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=800&q=60"}
                       alt={companyName || job.title}
@@ -142,7 +187,7 @@ export default function Jobs() {
                   </Link>
 
                   <div className="job-body">
-                    <Link to={`/jobs/${job._id}`} className="job-title">
+                    <Link to={`/jobs/${job._id || ""}`} className="job-title">
                       {companyName ? `${companyName} is hiring for ${job.title}` : job.title}
                       {job.type ? ` | ${job.type[0].toUpperCase() + job.type.slice(1)}` : ""}
                     </Link>
