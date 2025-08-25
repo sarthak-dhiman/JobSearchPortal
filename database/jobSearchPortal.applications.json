@@ -1,0 +1,19 @@
+[{
+  "_id": {
+    "$oid": "68a858aa2adebab6c0c94c71"
+  },
+  "job": {
+    "$oid": "68a858aa2adebab6c0c94c69"
+  },
+  "user": {
+    "$oid": "68a858aa2adebab6c0c94c58"
+  },
+  "status": "applied",
+  "createdAt": {
+    "$date": "2025-08-22T11:46:50.624Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-22T11:46:50.624Z"
+  },
+  "__v": 0
+}]

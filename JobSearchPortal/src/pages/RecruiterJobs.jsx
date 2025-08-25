@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../utils/api";
 import "./Recruiter.css";
 
@@ -45,6 +46,9 @@ export default function RecruiterJobs() {
               </div>
               <div className="rec-actions">
                 {}
+                <Link className="btn btn--ghost" to={`/recruiter/jobs/${j._id}/applications`}>
+                Applications
+                </Link>
                 <button className="btn btn--danger" onClick={() => remove(j._id)}>Delete</button>
               </div>
             </li>

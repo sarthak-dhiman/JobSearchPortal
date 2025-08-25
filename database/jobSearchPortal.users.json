@@ -1,0 +1,132 @@
+[{
+  "_id": {
+    "$oid": "68a858aa2adebab6c0c94c57"
+  },
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "password": "$2b$10$k1nQVV.ZluNtf43nZe5F9.EbHIWbcEnqaYtBhDStReEBVA1Wn93ny",
+  "role": "admin",
+  "createdAt": {
+    "$date": "2025-08-22T11:46:50.443Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-22T11:46:50.443Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68a858aa2adebab6c0c94c58"
+  },
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "$2b$10$NuV8czhTwosMqksYa/Uge.GM1odqsnBhUxJKE1VSPOJxGZ4SN4dv6",
+  "role": "user",
+  "createdAt": {
+    "$date": "2025-08-22T11:46:50.444Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-22T11:46:50.444Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68a9db412a08eb7bb697f59b"
+  },
+  "name": "Sarthak Dhiman",
+  "email": "sarthakdhiman49@gmail.com",
+  "password": "$2b$10$erlZTCAfdUwH290kE9QvtuS1e.shLwP1kIvVgEZWznu8t9kCSLvgO",
+  "role": "user",
+  "phone": "",
+  "address": "",
+  "skills": [],
+  "savedJobs": [],
+  "createdAt": {
+    "$date": "2025-08-23T15:16:17.871Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-23T15:16:17.871Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68a9ee89b503f98505d269a1"
+  },
+  "name": "me",
+  "email": "me@me.com",
+  "password": "$2b$10$LS02rU1hYUNLuewe7BecEeWB5hkXqpMR2HzwLPHkSqgQ2lTTMuzs.",
+  "role": "user",
+  "phone": "",
+  "address": "",
+  "skills": [],
+  "savedJobs": [],
+  "createdAt": {
+    "$date": "2025-08-23T16:38:33.472Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-23T16:38:33.472Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68a9eeaab503f98505d269ad"
+  },
+  "name": "meme",
+  "email": "meme@me.com",
+  "password": "$2b$10$3FTl2gVo1gjxRjYoGfSmzOuqMxvaVK4tFktZK6zeUW8Usnv2gNh92",
+  "role": "admin",
+  "phone": "",
+  "address": "",
+  "skills": [],
+  "savedJobs": [],
+  "createdAt": {
+    "$date": "2025-08-23T16:39:06.251Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-23T16:39:06.251Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68aa15e3b503f98505d269fd"
+  },
+  "name": "memen",
+  "email": "m@me.com",
+  "password": "$2b$10$iJ9lSU4lpgaNdqezpoOg6e1xIWmj7/qqhBYZ18ePxo0XL/36OL7MW",
+  "role": "recruiter",
+  "phone": "",
+  "address": "",
+  "skills": [],
+  "savedJobs": [],
+  "createdAt": {
+    "$date": "2025-08-23T19:26:27.794Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-23T19:26:27.794Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68ab09873212c2c9d7864993"
+  },
+  "name": "memen",
+  "email": "a@me.com",
+  "password": "$2b$10$7j8TodeV75O4LGOuI8YttOGo5z6ntHh2Lvkq6fJK36E5G2Pbu0xKG",
+  "role": "admin",
+  "phone": "",
+  "address": "",
+  "skills": [],
+  "savedJobs": [],
+  "createdAt": {
+    "$date": "2025-08-24T12:45:59.047Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-24T14:39:00.331Z"
+  },
+  "__v": 0
+}]

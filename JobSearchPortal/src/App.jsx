@@ -12,6 +12,10 @@ import Companies from "./pages/Companies";
 import JobDetails from "./pages/JobDetails";
 import RecruiterPost from "./pages/RecruiterPost";
 import RecruiterJobs from "./pages/RecruiterJobs";
+import AdminApplications from "./pages/AdminApplications";
+import RecruiterApplications from "./pages/RecruiterApplications";
+import JobApplications from "./pages/JobApplication";
+import MyApplications from "./pages/MyApplications";
 import "./index.css";
 
 function App() {
@@ -36,7 +40,10 @@ function App() {
         />
         <Route path="/recruiter/post" element={<RecruiterPost />} />
         <Route path="/recruiter/jobs" element={<RecruiterJobs />} />
-
+        <Route path="/admin/applications" element={<AdminApplications />} />
+        <Route path="/recruiter/applications" element={<RecruiterApplications />} />
+        <Route path="/recruiter/jobs/:jobId/applications" element={<JobApplications />} />
+        <Route path="/applications/mine" element={<MyApplications />} />
         <Route
           path="/admin"
           element={

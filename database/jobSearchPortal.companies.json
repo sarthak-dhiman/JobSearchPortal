@@ -1,0 +1,48 @@
+[{
+  "_id": {
+    "$oid": "68a858aa2adebab6c0c94c5c"
+  },
+  "name": "Google",
+  "website": "https://google.com",
+  "location": "United States",
+  "size": "10k+",
+  "createdAt": {
+    "$date": "2025-08-22T11:46:50.603Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-22T11:46:50.603Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68a858aa2adebab6c0c94c5d"
+  },
+  "name": "Microsoft",
+  "website": "https://microsoft.com",
+  "location": "United States",
+  "size": "10k+",
+  "createdAt": {
+    "$date": "2025-08-22T11:46:50.603Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-22T11:46:50.603Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68a858aa2adebab6c0c94c5e"
+  },
+  "name": "Amazon",
+  "website": "https://amazon.com",
+  "location": "United States",
+  "size": "10k+",
+  "createdAt": {
+    "$date": "2025-08-22T11:46:50.603Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-22T11:46:50.603Z"
+  },
+  "__v": 0
+}]
