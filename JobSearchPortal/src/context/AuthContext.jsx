@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const isAuthed = !!token && !!user;
 
-  // hydrate from storage on first mount
   useEffect(() => {
     try {
       const t = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -19,11 +18,9 @@ export function AuthProvider({ children }) {
         setUser(u);
       }
     } catch {
-      // ignore
     }
   }, []);
 
-  // optional: validate token & refresh user
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -32,7 +29,7 @@ export function AuthProvider({ children }) {
         const { data } = await api.get("users/me");
         if (!ignore) setUser(data);
       } catch {
-        if (!ignore) logout(); // invalid token -> logout
+        if (!ignore) logout();
       }
     })();
     return () => { ignore = true; };
@@ -41,14 +38,11 @@ export function AuthProvider({ children }) {
   const login = (nextUser, nextToken, remember = true) => {
     setUser(nextUser);
     setToken(nextToken);
-    // persist
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem("token", nextToken);
     storage.setItem("user", JSON.stringify(nextUser));
-    // clear the other storage to avoid conflicts
     (remember ? sessionStorage : localStorage).removeItem("token");
     (remember ? sessionStorage : localStorage).removeItem("user");
-    // notify any listeners (optional)
     window.dispatchEvent(new Event("auth:changed"));
   };
 

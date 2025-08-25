@@ -20,7 +20,6 @@ export default function JobDetails() {
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load job
   useEffect(() => {
     let aborted = false;
     (async () => {
