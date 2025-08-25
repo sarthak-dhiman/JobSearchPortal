@@ -40,10 +40,10 @@ export const authMiddleware = async (req, res, next) => {
 };
 
 export const recruiterOnly = (req, res, next) => {
-  if (!req.user) return res.status(401).json({ error: "Unauthorized" });
-  if (req.user.role !== "recruiter") {
-    return res.status(403).json({ error: "Recruiter only access" });
+   if (req.user.role === "recruiter" || req.user.role === "admin") {
+    return next();
   }
+  return res.status(403).json({ error: "Recruiter only access" });
   next();
 };
 

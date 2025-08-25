@@ -143,7 +143,7 @@ export default function Navbar() {
                   </NavLink>
                 )}
 
-                {}
+                {/* Regular user applications */}
                 {isAuthed && role !== "recruiter" && role !== "admin" && (
                   <NavLink
                     to="/applications/mine"
