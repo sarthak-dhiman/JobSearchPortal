@@ -10,11 +10,9 @@ export default function Profile() {
   const [skillInput, setSkillInput] = useState("");
   const fileRef = useRef(null);
 
-  // --- helpers ---
   const load = async () => {
     try {
-      const { data } = await api.get("/users/me"); // keep your existing path
-      // ensure defaults so the UI never crashes
+      const { data } = await api.get("/users/me");
       setMe({
         ...data,
         phone: data?.phone || "",
@@ -32,10 +30,8 @@ export default function Profile() {
   const validate = () => {
     if (!me?.name?.trim()) return "Name is required.";
     if (!me?.email?.trim()) return "Email is required.";
-    // simple email check
     const em = me.email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return "Please enter a valid email.";
-    // optional phone check (basic E.164-ish or local numbers)
     if (me.phone && !/^[+]?[\d\s().-]{7,}$/.test(me.phone.trim())) return "Please enter a valid phone number.";
     return "";
   };
@@ -54,7 +50,7 @@ export default function Profile() {
         skills: (me.skills || []).map(s => String(s).trim()).filter(Boolean),
       };
       await api.put("/users/me", payload);
-      await load(); // refresh with server truth
+      await load();
     } catch (e) {
       setErr(e.response?.data?.message || "Could not save profile");
     } finally {
@@ -62,7 +58,6 @@ export default function Profile() {
     }
   };
 
-  // ---- resume upload / delete ----
   const onPickFile = () => fileRef.current?.click();
 
   const uploadResume = async (file) => {
@@ -91,7 +86,6 @@ export default function Profile() {
     }
   };
 
-  // ---- skills handlers ----
   const addSkill = () => {
     const s = skillInput.trim();
     if (!s) return;
